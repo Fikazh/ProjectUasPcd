@@ -38,9 +38,10 @@ Menyimpan dataset ke folder directory (dimatikan jika dataset sudah tersimpan)
 '''
 Membaca dataset yang sudah dibuat
 '''
-pick_in = open('mushroom_dataset.pickle','rb')
+pick_in = open('mushroom_dataset.pickle', 'rb')
 data = pickle.load(pick_in)
 pick_in.close()
+print(data)
 
 # random.shuffle(data)
 features = []
@@ -50,7 +51,8 @@ for feature, label in data:
     features.append(feature)
     labels.append(label)
 
-xtrain, xtest, ytrain, ytest = train_test_split(features, labels, test_size= 0.3)
+xtrain, xtest, ytrain, ytest = train_test_split(
+    features, labels, test_size=0.3)
 
 '''
 Membuat dan menyimpan model (dimatikan jika model sudah tersimpan)
@@ -68,17 +70,19 @@ Membaca model yang sudah dibuat
 pick = open('model.sav', 'rb')
 model = pickle.load(pick)
 pick.close()
+print(model)
 
 prediksi = model.predict(xtest)
 akurasi = model.score(xtest, ytest)
 
-categories = ['Agaricus (Bisa Dimakan)', 'Amanita(Beracun)', 'Boletus(Bisa dimakan)', 'Conocybe filaris (Beracun)', 'Cortinarius (Bisa Dimakan)', 'Russula (Beracun)']
+categories = ['Agaricus (Bisa Dimakan)', 'Amanita(Beracun)', 'Boletus(Bisa dimakan)',
+              'Conocybe filaris (Beracun)', 'Cortinarius (Bisa Dimakan)', 'Russula (Beracun)']
 
 
 print('Akurasi: ', akurasi)
 
-print('Prediksi: ', categories[prediksi[0]])
-
-jamoer = xtest[0].reshape(50,50)
-plt.imshow(jamoer, cmap='gray')
-plt.show()
+for i in range(13):
+    print('Prediksi: ', categories[prediksi[i]])
+    # jamoer = xtest[i].reshape(50, 50)
+    # plt.imshow(jamoer, cmap='gray')
+    # plt.show()
