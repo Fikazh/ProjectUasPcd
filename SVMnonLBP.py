@@ -6,8 +6,10 @@ import matplotlib.pyplot as plt
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+from sklearn import metrics
 
 categories = ['Beracun', 'BisaDimakan']
+
 data = []
 dir = os.getcwd()
 
@@ -33,7 +35,7 @@ def SetupDataset():
         for img in os.listdir(path):
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
-            image = cv.resize(image, (200, 200))
+            image = cv.resize(image, (50, 50))
 
             feature_matrix = np.array(image).flatten()
             data.append([feature_matrix, label])
@@ -54,6 +56,7 @@ def SVM():
         features, labels, test_size=0.3, random_state=42)
 
     # Membuat model
+
     # model = SVC(C=1, kernel='poly', gamma='auto')
     # model.fit(xtrain, ytrain)
     # TulisDataset('model1.sav', model)
@@ -64,6 +67,8 @@ def SVM():
     akurasi = model1.score(xtest, ytest)
 
     print('Akurasi: ', akurasi)
+    print("Precision:", metrics.precision_score(ytest, prediksi))
+    print("Recall:", metrics.recall_score(ytest, prediksi))
 
     # for i in range(13):
     # print('Prediksi: ', categories[prediksi[i]])
