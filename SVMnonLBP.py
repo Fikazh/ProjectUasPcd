@@ -64,6 +64,8 @@ def SVM():
     akurasi = model1.score(xtest, ytest)
 
     print('Akurasi: ', akurasi)
+    print("Precision:", metrics.precision_score(ytest, prediksi))
+    print("Recall:", metrics.recall_score(ytest, prediksi))
 
     # for i in range(13):
     # print('Prediksi: ', categories[prediksi[i]])
