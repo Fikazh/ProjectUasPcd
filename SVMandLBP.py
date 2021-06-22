@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+from sklearn import metrics
 
 categories = ['Beracun', 'BisaDimakan']
 data = []
@@ -97,7 +98,7 @@ def SetupDataset():
         for img in os.listdir(path):
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
-            image = cv.resize(image, (200, 200))
+            image = cv.resize(image, (50, 50))
 
             # Pengubahan menjadi Tekstur
             height, width = image.shape
@@ -113,11 +114,11 @@ def SetupDataset():
 
 
 def SVM():
-    data1 = BacaDataset("jamurDataset2.pickle")
+    data2 = BacaDataset("jamurDataset2.pickle")
     features = []
     labels = []
 
-    for feature, label in data1:
+    for feature, label in data2:
         features.append(feature)
         labels.append(label)
 
@@ -125,6 +126,7 @@ def SVM():
         features, labels, test_size=0.3, random_state=42)
 
     # Membuat model
+
     # model = SVC(C=1, kernel='poly', gamma='auto')
     # model.fit(xtrain, ytrain)
     # TulisDataset('model2.sav', model)
