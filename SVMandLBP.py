@@ -98,7 +98,7 @@ def SetupDataset():
         for img in os.listdir(path):
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
-            image = cv.resize(image, (50, 50))
+            image = cv.resize(image, (200, 200))
 
             # Pengubahan menjadi Tekstur
             height, width = image.shape
@@ -117,13 +117,14 @@ def SVM():
     data2 = BacaDataset("jamurDataset2.pickle")
     features = []
     labels = []
+    print(data2)
 
     for feature, label in data2:
         features.append(feature)
         labels.append(label)
 
     xtrain, xtest, ytrain, ytest = train_test_split(
-        features, labels, test_size=0.3, random_state=42)
+        features, labels, test_size=0.3)
 
     # Membuat model
 
@@ -140,13 +141,13 @@ def SVM():
     print("Precision:", metrics.precision_score(ytest, prediksi))
     print("Recall:", metrics.recall_score(ytest, prediksi))
 
-    # for i in range(14):
-    #     print('Prediksi: ', categories[prediksi[i]])
-    #     jamoer = xtest[i].reshape(200, 200)
-    #     plt.imshow(jamoer, cmap='gray')
-    #     plt.show()
-    #     cv.waitKey(0)
-    #     cv.destroyAllWindows()
+    for i in range(14):
+        print('Prediksi: ', categories[prediksi[i]])
+        # jamoer = xtest[i].reshape(200, 200)
+        # plt.imshow(jamoer, cmap='gray')
+        # plt.show()
+        # cv.waitKey(0)
+        # cv.destroyAllWindows()
 
 
 # SetupDataset()

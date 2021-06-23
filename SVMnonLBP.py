@@ -7,6 +7,7 @@ import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn import metrics
+import pandas as pd
 
 categories = ['Beracun', 'BisaDimakan']
 
@@ -35,16 +36,22 @@ def SetupDataset():
         for img in os.listdir(path):
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
-            image = cv.resize(image, (50, 50))
+            image = cv.resize(image, (200, 200))
 
             feature_matrix = np.array(image).flatten()
             data.append([feature_matrix, label])
 
-    TulisDataset("jamurDataset1.pickle", data)
+    df = pd.DataFrame(data=data).T
+    df.to_csv("jamur1.csv")
+    # TulisDataset("jamurDataset1.pickle", data)
 
 
 def SVM():
-    data1 = BacaDataset("jamurDataset1.pickle")
+    # data1 = BacaDataset("jamurDataset1.pickle")
+    data1 = pd.read_csv('jamur1.csv', index_col=1)
+
+    print(data1)
+
     features = []
     labels = []
 
@@ -53,7 +60,13 @@ def SVM():
         labels.append(label)
 
     xtrain, xtest, ytrain, ytest = train_test_split(
-        features, labels, test_size=0.3, random_state=42)
+        features, labels, test_size=0.3)
+
+    # print(xtrain)
+    # print()
+    # print(xtest)
+    # print(ytrain)
+    # print(ytest)
 
     # Membuat model
 
@@ -61,18 +74,18 @@ def SVM():
     # model.fit(xtrain, ytrain)
     # TulisDataset('model1.sav', model)
 
-    model1 = BacaDataset('model1.sav')
+    # model1 = BacaDataset('model1.sav')
 
-    prediksi = model1.predict(xtest)
-    akurasi = model1.score(xtest, ytest)
+    # prediksi = model1.predict(xtest)
+    # akurasi = model1.score(xtest, ytest)
 
-    print('Akurasi: ', akurasi)
-    print("Precision:", metrics.precision_score(ytest, prediksi))
-    print("Recall:", metrics.recall_score(ytest, prediksi))
+    # print('Akurasi: ', akurasi)
+    # print("Precision:", metrics.precision_score(ytest, prediksi))
+    # print("Recall:", metrics.recall_score(ytest, prediksi))
 
-    # for i in range(13):
-    # print('Prediksi: ', categories[prediksi[i]])
-    # jamoer = xtest[i].reshape(50, 50)
+    # for i in range(14):
+    #     print('Prediksi: ', categories[prediksi[i]])
+    # jamoer = xtest[i].reshape(200, 200)
     # plt.imshow(jamoer, cmap='gray')
     # plt.show()
 
