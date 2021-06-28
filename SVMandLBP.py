@@ -1,8 +1,7 @@
-import numpy as np
-import cv2 as cv
-from PIL import Image
 import os
 import pickle
+import cv2 as cv
+import numpy as np
 import matplotlib.pyplot as plt
 from numpy import mean
 from skimage import data
@@ -16,8 +15,6 @@ from sklearn.metrics import confusion_matrix
 from skimage.feature import local_binary_pattern
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
-
-
 
 categories = ['Beracun', 'BisaDimakan']
 dataGray, dataLBP, dataLBPHist = list(), list(), list()
@@ -74,7 +71,7 @@ def SetupDataset():
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
             image = cv.resize(image, (200, 200))
-
+            
             # Perubahan image menjadi Tekstur
             lbp = local_binary_pattern(image, n_points, radius, METHOD)
             hist, bins = np.histogram(lbp.ravel(), 256, [0, 256])
@@ -88,7 +85,7 @@ def SetupDataset():
     TulisDataset("jamurDatasetLBP.pickle", dataLBP)
     TulisDataset("jamurDatasetLBPHist.pickle", dataLBPHist)
 
-
+    
 def getDatasets(datasets):
     data2 = BacaDataset(datasets)
     features = []
@@ -193,6 +190,7 @@ jika dipakai lagi sebelum image no 24-95 di folder Beracun&BisaDimakan
 dihapus, maka gambarnya jadi berantakan
 '''
 #DuplicateDataset()
+
 
 SetupDataset()
 SVMandKfold()
