@@ -3,7 +3,7 @@ import pickle
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy import mean
+from PIL import Image
 from skimage import data
 from sklearn.svm import SVC
 from sklearn import metrics
@@ -16,7 +16,8 @@ from skimage.feature import local_binary_pattern
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
 
-categories = ['Beracun', 'BisaDimakan']
+categories = ['Beracun', 'BisaDimakan']  # Class
+# list tampung hasil array citra
 dataGray, dataLBP, dataLBPHist = list(), list(), list()
 dir = os.getcwd()
 
@@ -38,12 +39,13 @@ def BacaDataset(name):
     pick_in.close()
     return ext
 
+
 def DuplicateDataset():
     for category in categories:
         path = os.path.join(dir, category)
-        i=24
-        j=48
-        k=72
+        i = 24
+        j = 48
+        k = 72
 
         for img in os.listdir(path):
             imgpath = os.path.join(path, img)
@@ -55,12 +57,14 @@ def DuplicateDataset():
             horizontal_img = image.transpose(method=Image.FLIP_LEFT_RIGHT)
             horizontal_img.save(f'{path}/{j}.png')
 
-            vertical_horizontal_img = horizontal_img.transpose(method=Image.FLIP_TOP_BOTTOM)
+            vertical_horizontal_img = horizontal_img.transpose(
+                method=Image.FLIP_TOP_BOTTOM)
             vertical_horizontal_img.save(f'{path}/{k}.png')
 
-            i+=1
-            j+=1
-            k+=1
+            i += 1
+            j += 1
+            k += 1
+
 
 def SetupDataset():
     for category in categories:
@@ -71,7 +75,7 @@ def SetupDataset():
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
             image = cv.resize(image, (200, 200))
-            
+
             # Perubahan image menjadi Tekstur
             lbp = local_binary_pattern(image, n_points, radius, METHOD)
             hist, bins = np.histogram(lbp.ravel(), 256, [0, 256])
@@ -85,7 +89,7 @@ def SetupDataset():
     TulisDataset("jamurDatasetLBP.pickle", dataLBP)
     TulisDataset("jamurDatasetLBPHist.pickle", dataLBPHist)
 
-    
+
 def getDatasets(datasets):
     data2 = BacaDataset(datasets)
     features = []
@@ -101,7 +105,7 @@ def getScores(cv, model, X, y):
     # evaluate the model
     scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
     # return scores
-    return scores, mean(scores), scores.min(), scores.max()
+    return scores, scores.mean(), scores.min(), scores.max()
 
 
 def SVMandKfold():
@@ -180,17 +184,17 @@ def showHistogram():
     plt.xlabel("LBP pixel bucket")
 
     ax.hist(featuresLBP[0].ravel(), density=True, bins=100, range=(0, 256))
-    ax.set_xlim([0, 100])
-    ax.set_ylim([0, 0.5])
+    ax.set_xlim([0, 40])
+    ax.set_ylim([0, 0.4])
     plt.show()
+
 
 '''
 DupicateDataset() dipakai hanya sekali,
 jika dipakai lagi sebelum image no 24-95 di folder Beracun&BisaDimakan
 dihapus, maka gambarnya jadi berantakan
 '''
-#DuplicateDataset()
-
+# DuplicateDataset()
 
 SetupDataset()
 SVMandKfold()
