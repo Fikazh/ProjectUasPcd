@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+from PIL import Image
 import os
 import pickle
 import matplotlib.pyplot as plt
@@ -15,6 +16,7 @@ from sklearn.metrics import confusion_matrix
 from skimage.feature import local_binary_pattern
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
+
 
 
 categories = ['Beracun', 'BisaDimakan']
@@ -39,6 +41,29 @@ def BacaDataset(name):
     pick_in.close()
     return ext
 
+def DuplicateDataset():
+    for category in categories:
+        path = os.path.join(dir, category)
+        i=24
+        j=48
+        k=72
+
+        for img in os.listdir(path):
+            imgpath = os.path.join(path, img)
+            image = Image.open(imgpath)
+
+            vertical_img = image.transpose(method=Image.FLIP_TOP_BOTTOM)
+            vertical_img.save(f'{path}/{i}.png')
+
+            horizontal_img = image.transpose(method=Image.FLIP_LEFT_RIGHT)
+            horizontal_img.save(f'{path}/{j}.png')
+
+            vertical_horizontal_img = horizontal_img.transpose(method=Image.FLIP_TOP_BOTTOM)
+            vertical_horizontal_img.save(f'{path}/{k}.png')
+
+            i+=1
+            j+=1
+            k+=1
 
 def SetupDataset():
     for category in categories:
@@ -162,6 +187,12 @@ def showHistogram():
     ax.set_ylim([0, 0.5])
     plt.show()
 
+'''
+DupicateDataset() dipakai hanya sekali,
+jika dipakai lagi sebelum image no 24-95 di folder Beracun&BisaDimakan
+dihapus, maka gambarnya jadi berantakan
+'''
+#DuplicateDataset()
 
 SetupDataset()
 SVMandKfold()
