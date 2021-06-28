@@ -1,80 +1,30 @@
 import numpy as np
 import cv2 as cv
-from matplotlib import pyplot as plt
 import os
-import matplotlib.pyplot as plt
 import pickle
-from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from numpy import mean
+from skimage import data
 from sklearn.svm import SVC
 from sklearn import metrics
+from skimage import feature
+from skimage.color import label2rgb
+from skimage.transform import rotate
+from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
+from skimage.feature import local_binary_pattern
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
+
 
 categories = ['Beracun', 'BisaDimakan']
-data = []
+dataGray, dataLBP, dataLBPHist = list(), list(), list()
 dir = os.getcwd()
 
-
-def get_pixel(img, center, x, y):
-
-    new_value = 0
-
-    try:
-        # If local neighbourhood pixel
-        # value is greater than or equal
-        # to center pixel values then
-        # set it to 1
-        if img[x][y] >= center:
-            new_value = 1
-
-    except:
-        # Exception is required when
-        # neighbourhood value of a center
-        # pixel value is null i.e. values
-        # present at boundaries.
-        pass
-
-    return new_value
-
-
-def lbp_calculated_pixel(img, x, y):
-
-    center = img[x][y]
-
-    val_ar = []
-
-    # top_left
-    val_ar.append(get_pixel(img, center, x-1, y-1))
-
-    # top
-    val_ar.append(get_pixel(img, center, x-1, y))
-
-    # top_right
-    val_ar.append(get_pixel(img, center, x-1, y + 1))
-
-    # right
-    val_ar.append(get_pixel(img, center, x, y + 1))
-
-    # bottom_right
-    val_ar.append(get_pixel(img, center, x + 1, y + 1))
-
-    # bottom
-    val_ar.append(get_pixel(img, center, x + 1, y))
-
-    # bottom_left
-    val_ar.append(get_pixel(img, center, x + 1, y-1))
-
-    # left
-    val_ar.append(get_pixel(img, center, x, y-1))
-
-    # Now, we need to convert binary
-    # values to decimal
-    power_val = [1, 2, 4, 8, 16, 32, 64, 128]
-
-    val = 0
-
-    for i in range(len(val_ar)):
-        val += val_ar[i] * power_val[i]
-
-    return val
+# settings for LBP
+METHOD = 'uniform'
+radius = 3
+n_points = 8 * radius
 
 
 def TulisDataset(name, ext):
@@ -98,56 +48,121 @@ def SetupDataset():
         for img in os.listdir(path):
             imgpath = os.path.join(path, img)
             image = cv.imread(imgpath, 0)
-            image = cv.resize(image, (50, 50))
+            image = cv.resize(image, (200, 200))
 
-            # Pengubahan menjadi Tekstur
-            height, width = image.shape
-            img_lbp = np.zeros((height, width), np.uint8)
-            for i in range(0, height):
-                for j in range(0, width):
-                    img_lbp[i, j] = lbp_calculated_pixel(image, i, j)
+            # Perubahan image menjadi Tekstur
+            lbp = local_binary_pattern(image, n_points, radius, METHOD)
+            hist, bins = np.histogram(lbp.ravel(), 256, [0, 256])
+            hist_transponse = np.transpose(hist[0:26, np.newaxis]).flatten()
+            feature_matrix = np.array(hist_transponse).flatten()
+            dataGray.append([image, label])
+            dataLBP.append([lbp, label])
+            dataLBPHist.append([feature_matrix, label])
 
-            feature_matrix = np.array(img_lbp).flatten()
-            data.append([feature_matrix, label])
+    TulisDataset("jamurDatasetGray.pickle", dataGray)
+    TulisDataset("jamurDatasetLBP.pickle", dataLBP)
+    TulisDataset("jamurDatasetLBPHist.pickle", dataLBPHist)
 
-    TulisDataset("jamurDataset2.pickle", data)
 
-
-def SVM():
-    data2 = BacaDataset("jamurDataset2.pickle")
+def getDatasets(datasets):
+    data2 = BacaDataset(datasets)
     features = []
     labels = []
 
     for feature, label in data2:
         features.append(feature)
         labels.append(label)
+    return features, labels
 
-    xtrain, xtest, ytrain, ytest = train_test_split(
-        features, labels, test_size=0.3, random_state=42)
+
+def getScores(cv, model, X, y):
+    # evaluate the model
+    scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
+    # return scores
+    return scores, mean(scores), scores.min(), scores.max()
+
+
+def SVMandKfold():
+    featuresLBP, labelsLBP = getDatasets("jamurDatasetLBP.pickle")
+    features, labels = getDatasets("jamurDatasetLBPHist.pickle")
 
     # Membuat model
+    model2 = SVC(C=1, kernel='poly', gamma='auto')
+    means, mins, maxs = list(), list(), list()
 
-    # model = SVC(C=1, kernel='poly', gamma='auto')
-    # model.fit(xtrain, ytrain)
-    # TulisDataset('model2.sav', model)
+    # Kfold
+    cvK = KFold(n_splits=5, shuffle=True, random_state=42)
+    perIndx = 1
+    for train_index, test_index in cvK.split(features):
+        # split data train dan test dengan kfold.split
+        X_train, X_test = np.array(
+            features)[train_index], np.array(features)[test_index]
+        y_train, y_test = np.array(
+            labels)[train_index], np.array(labels)[test_index]
+        print("TRAIN:", train_index, "TEST:", test_index)
+        model2.fit(X_train, y_train)
 
-    model2 = BacaDataset('model2.sav')
+        # cros validation
+        scores, k_mean, k_min, k_max = getScores(
+            cvK, model2, X_test, y_test)
+        print('Isi Score = ', scores)
+        print('> Percobaan ke :%d, accuracy(mean)=%.3f (min = %.3f,max = %.3f)' %
+              (perIndx, k_mean, k_min, k_max))
+        perIndx += 1
 
-    prediksi = model2.predict(xtest)
-    akurasi = model2.score(xtest, ytest)
-
-    print('Akurasi: ', akurasi)
-    print("Precision:", metrics.precision_score(ytest, prediksi))
-    print("Recall:", metrics.recall_score(ytest, prediksi))
-
-    # for i in range(14):
-    #     print('Prediksi: ', categories[prediksi[i]])
-    #     jamoer = xtest[i].reshape(200, 200)
-    #     plt.imshow(jamoer, cmap='gray')
-    #     plt.show()
-    #     cv.waitKey(0)
-    #     cv.destroyAllWindows()
+        y_pred = cross_val_predict(model2, X_test, y_test, cv=cvK)
+        print(y_test)
+        print(y_pred)
+        # menampilkan benar tidaknya prediksi (satuan) dalam confusion matrix
+        print(confusion_matrix(y_pred=y_pred, y_true=y_test))
+        # menampilkan benar tidaknya prediksi (presentase) dalam confusion matrix
+        matrix = plot_confusion_matrix(model2, X=X_test, y_true=y_test,
+                                       display_labels=categories,
+                                       cmap=plt.cm.Blues,
+                                       normalize='true')
+        plt.title('Confusion matrix for our classifier')
+        plt.show()
 
 
-# SetupDataset()
-SVM()
+def overlay_labels(image, lbp, labels):
+    mask = np.logical_or.reduce([lbp == each for each in labels])
+    return label2rgb(mask, image=image, bg_label=0, alpha=0.5)
+
+
+def highlight_bars(bars, indexes):
+    for i in indexes:
+        bars[i].set_facecolor('r')
+
+
+def hist(ax, lbp):
+    n_bins = int(lbp.max() + 1)
+    return ax.hist(lbp.ravel(), density=True, bins=n_bins, range=(0, n_bins), facecolor='0.5')
+
+
+def showHistogram():
+    featuresGray, labelsGray = getDatasets("jamurDatasetGray.pickle")
+    featuresLBP, labelsLBP = getDatasets("jamurDatasetLBP.pickle")
+
+    jamoer = featuresGray[0].reshape(200, 200)
+    plt.imshow(jamoer, cmap='gray')
+    plt.show()
+
+    jamoer = featuresLBP[0].reshape(200, 200)
+    plt.imshow(jamoer, cmap='gray')
+    plt.show()
+
+    plt.style.use("ggplot")
+    (fig, ax) = plt.subplots()
+    fig.suptitle("Local Binary Patterns")
+    plt.ylabel("% of Pixels")
+    plt.xlabel("LBP pixel bucket")
+
+    ax.hist(featuresLBP[0].ravel(), density=True, bins=100, range=(0, 256))
+    ax.set_xlim([0, 100])
+    ax.set_ylim([0, 0.5])
+    plt.show()
+
+
+SetupDataset()
+SVMandKfold()
+showHistogram()
