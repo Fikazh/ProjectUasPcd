@@ -16,10 +16,13 @@ from skimage.feature import local_binary_pattern
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
 
+folder = 'Datasets'
 categories = ['Beracun', 'BisaDimakan']  # Class
+dir = os.getcwd()
+folderDir = os.path.join(dir, folder)
 # list tampung hasil array citra
 dataGray, dataLBP, dataLBPHist = list(), list(), list()
-dir = os.getcwd()
+
 
 # settings for LBP
 METHOD = 'uniform'
@@ -42,7 +45,7 @@ def BacaDataset(name):
 
 def DuplicateDataset():
     for category in categories:
-        path = os.path.join(dir, category)
+        path = os.path.join(folderDir, category)
         i = 24
         j = 48
         k = 72
@@ -68,7 +71,7 @@ def DuplicateDataset():
 
 def SetupDataset():
     for category in categories:
-        path = os.path.join(dir, category)
+        path = os.path.join(folderDir, category)
         label = categories.index(category)
 
         for img in os.listdir(path):
@@ -109,7 +112,6 @@ def getScores(cv, model, X, y):
 
 
 def SVMandKfold():
-    featuresLBP, labelsLBP = getDatasets("jamurDatasetLBP.pickle")
     features, labels = getDatasets("jamurDatasetLBPHist.pickle")
 
     # Membuat model
@@ -125,44 +127,34 @@ def SVMandKfold():
             features)[train_index], np.array(features)[test_index]
         y_train, y_test = np.array(
             labels)[train_index], np.array(labels)[test_index]
-        print("TRAIN:", train_index, "TEST:", test_index)
+        # print("TRAIN:", train_index, "TEST:", test_index)
         model2.fit(X_train, y_train)
 
         # cros validation
         scores, k_mean, k_min, k_max = getScores(
             cvK, model2, X_test, y_test)
         print('Isi Score = ', scores)
-        print('> Percobaan ke :%d, accuracy(mean)=%.3f (min = %.3f,max = %.3f)' %
+        print('> Percobaan ke : %d, accuracy(mean)=%.3f (min = %.3f,max = %.3f)' %
               (perIndx, k_mean, k_min, k_max))
         perIndx += 1
 
         y_pred = cross_val_predict(model2, X_test, y_test, cv=cvK)
-        print(y_test)
-        print(y_pred)
+        print("Data Benar\t:", y_test)
+        print("Data Pediksi\t:", y_pred)
+
         # menampilkan benar tidaknya prediksi (satuan) dalam confusion matrix
+        print("confusion matrix with Kfold Cross-Validation")
         print(confusion_matrix(y_pred=y_pred, y_true=y_test))
+
         # menampilkan benar tidaknya prediksi (presentase) dalam confusion matrix
-        matrix = plot_confusion_matrix(model2, X=X_test, y_true=y_test,
-                                       display_labels=categories,
-                                       cmap=plt.cm.Blues,
-                                       normalize='true')
-        plt.title('Confusion matrix for our classifier')
-        plt.show()
+        # matrix = plot_confusion_matrix(model2, X=X_test, y_true=y_test,
+        #                                display_labels=categories,
+        #                                cmap=plt.cm.Blues,
+        #                                normalize='true')
+        # plt.title('Confusion matrix for our classifier with SVM (non Kfold)')
+        # plt.show()
 
-
-def overlay_labels(image, lbp, labels):
-    mask = np.logical_or.reduce([lbp == each for each in labels])
-    return label2rgb(mask, image=image, bg_label=0, alpha=0.5)
-
-
-def highlight_bars(bars, indexes):
-    for i in indexes:
-        bars[i].set_facecolor('r')
-
-
-def hist(ax, lbp):
-    n_bins = int(lbp.max() + 1)
-    return ax.hist(lbp.ravel(), density=True, bins=n_bins, range=(0, n_bins), facecolor='0.5')
+        print()
 
 
 def showHistogram():
@@ -196,6 +188,6 @@ dihapus, maka gambarnya jadi berantakan
 '''
 # DuplicateDataset()
 
-SetupDataset()
+# SetupDataset()
 SVMandKfold()
 showHistogram()
